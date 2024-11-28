@@ -33,6 +33,7 @@
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
 #include <sys/timerfd.h>
+#include <cstdio>
 #include <unistd.h>
 #include <vector>
 

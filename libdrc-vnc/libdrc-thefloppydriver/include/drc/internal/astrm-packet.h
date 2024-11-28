@@ -26,6 +26,7 @@
 
 #include <array>
 #include <drc/types.h>
+#include <cstddef>
 #include <vector>
 
 namespace drc {
