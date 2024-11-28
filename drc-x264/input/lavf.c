@@ -28,6 +28,7 @@
 #define FAIL_IF_ERROR( cond, ... ) FAIL_IF_ERR( cond, "lavf", __VA_ARGS__ )
 #undef DECLARE_ALIGNED
 #include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
 #include <libavutil/mem.h>
 #include <libavutil/pixdesc.h>
 #include <libavutil/dict.h>
@@ -80,7 +81,7 @@ static int read_frame_internal( cli_pic_t *p_pic, lavf_hnd_t *h, int i_frame, vi
             return 0;
     }
 
-    AVCodecContext *c = h->lavf->streams[h->stream_id]->codec;
+    AVCodecContext *c = h->lavf->streams[h->stream_id]->codecpar;
     AVPacket *pkt = p_pic->opaque;
 
     avcodec_get_frame_defaults( h->frame );
@@ -177,12 +178,12 @@ static int open_file( char *psz_filename, hnd_t *p_handle, video_info_t *info, c
     FAIL_IF_ERROR( avformat_find_stream_info( h->lavf, NULL ) < 0, "could not find input stream info\n" )
 
     int i = 0;
-    while( i < h->lavf->nb_streams && h->lavf->streams[i]->codec->codec_type != AVMEDIA_TYPE_VIDEO )
+    while( i < h->lavf->nb_streams && h->lavf->streams[i]->codecpar->codec_type != AVMEDIA_TYPE_VIDEO )
         i++;
     FAIL_IF_ERROR( i == h->lavf->nb_streams, "could not find video stream\n" )
     h->stream_id       = i;
     h->next_frame      = 0;
-    AVCodecContext *c  = h->lavf->streams[i]->codec;
+    AVCodecContext *c  = h->lavf->streams[i]->codecpar;
     info->fps_num      = h->lavf->streams[i]->avg_frame_rate.num;
     info->fps_den      = h->lavf->streams[i]->avg_frame_rate.den;
     info->timebase_num = h->lavf->streams[i]->time_base.num;
@@ -250,7 +251,7 @@ static void picture_clean( cli_pic_t *pic )
 static int close_file( hnd_t handle )
 {
     lavf_hnd_t *h = handle;
-    avcodec_close( h->lavf->streams[h->stream_id]->codec );
+    avcodec_close( h->lavf->streams[h->stream_id]->codecpar );
     avformat_close_input( &h->lavf );
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(54, 28, 0)
     avcodec_free_frame( &h->frame );
